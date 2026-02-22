@@ -12,7 +12,7 @@
       HOME
     </a>
     
-         <button id="menuButton" class="md:hidden flex flex-col gap-1 relative z-20  bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">
+    <button id="menuButton" class=" flex flex-col gap-1 relative z-20  bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">
       <span class="block w-6 h-0.5 bg-gray-500"></span>
       <span class="block mt-1 mb-1 w-6 h-0.5 bg-gray-500"></span>
       <span class="block w-6 h-0.5 bg-gray-500"></span>
@@ -27,13 +27,13 @@
   <!-- Menu Links -->
   <div class="py-2">
 
-    <a href="../patient/efolder.html"
-       class="block px-4 py-2 border m-b-2 text-gray-700 hover:bg-gray-100 transition duration-150">
+    <a href="../clinical-update/clerking.html"
+       class="block px-4 py-2 border rounded m-b-2 text-gray-700 hover:bg-gray-100 transition duration-150">
        Clerking
     </a>
 
-    <a href="upload.html"
-       class="block px-4 py-2 border m-b-2  text-gray-700 hover:bg-gray-100 transition duration-150">
+    <a href="../clinical-update/upload.html"
+       class="block px-4 py-2 border m-b-2 rounded text-gray-700 hover:bg-gray-100 transition duration-150">
        Upload
     </a>
     <a href="../patient/index.html"
@@ -109,7 +109,7 @@
     <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
-  import {getFirestore, orderBy, getDocs, collection, where, query} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  import {getFirestore, Timestamp, orderBy, getDocs, collection, where, query} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
   import {getAuth, signOut, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
  
   const firebaseConfig = {
@@ -138,17 +138,48 @@ let pNumber = patient.patientNumber;
       const analytics = getAnalytics(app);
       const auth = getAuth(app);
   const db = getFirestore(app);
+  
   let q = query(
       collection(db, "files"),
       where("patientNumber", "==", pNumber),
       orderBy("createdAt", "desc")
      );
-  const efileDocs = await getDocs(q);
   
   
+  function getQueryDateBeween(){
+    if (!dateFrom.value) return null;
+    if (!dateTo.value) return null;
+    const fromDate = new Date(dateFrom.value);
+    const toDate = new Date(dateTo.value);
+
+// Make dateTo include the full day (23:59:59)
+    toDate.setHours(23, 59, 59, 999);
+    let q = query(
+  collection(db, "files"),
+  where("patientNumber", "==", pNumber),
+  where("createdAt", ">=", Timestamp.fromDate(fromDate)),
+  where("createdAt", "<=", Timestamp.fromDate(toDate)),
+  orderBy("createdAt", "desc")
+    );
+    return q;
+  }
 
     // Demo files for this patient
-    const eFolderFiles = [
+  dateTo.onchange = e=>{
+    let q = getQueryDateBeween();
+    if (q)
+    renderFiles(q);
+  }
+  dateFrom.onchange = e=>{
+    let q = getQueryDateBeween();
+    if (q)
+    renderFiles(q);
+  }
+
+   async function renderFiles(q) {
+      
+      const efileDocs = await getDocs(q);
+      const eFolderFiles = [
      // { file: 'prescription1.png', tag: 'Prescription', uploadedBy: 'Dr. User', uploadedAt: '2026-02-15T10:00:00' },
     //  { file: 'labreport1.png', tag: 'Lab Report', uploadedBy: 'Dr. User', uploadedAt: '2026-02-16T12:30:00' }
     ];
@@ -157,9 +188,8 @@ let pNumber = patient.patientNumber;
     let data = d.data();
     eFolderFiles.push(data)
   })
-
-    function renderFiles(from = null, to = null) {
       const container = document.getElementById('eFolderFiles');
+     container.innerHTML = "";
       let filtered = eFolderFiles;
       /*if (from) {
         filtered = filtered.filter(f => new Date(f.uploadedAt) >= new Date(from));
@@ -184,7 +214,7 @@ let pNumber = patient.patientNumber;
             <p><strong>Uploaded at:</strong> ${f.createdAt.toDate().toLocaleString()}</p>
           `;
           if (f.type=="image"){
-            fileElm.innerHTML += `<img src="${f.url}" alt="${f.tag}" class="mt-2 max-w-full rounded"> `;
+            fileElm.innerHTML += `<img src="${f.url}" alt="${f.tag}" class="mt-2 max-w-full rounded" > `;
           } else {
             fileElm.innerHTML +=`<div>${f.content}</div>`;
           }
@@ -194,15 +224,15 @@ let pNumber = patient.patientNumber;
     }
 
     // Initial render
-    renderFiles();
+    await renderFiles(q);
 
     // Filter by date range
-    document.getElementById('dateFrom').addEventListener('change', () => {
+   /* document.getElementById('dateFrom').addEventListener('change', () => {
       renderFiles(document.getElementById('dateFrom').value, document.getElementById('dateTo').value);
     });
     document.getElementById('dateTo').addEventListener('change', () => {
       renderFiles(document.getElementById('dateFrom').value, document.getElementById('dateTo').value);
-    });
+    });*/
 
     // Auto-fill printed at
     document.getElementById('printedAt').innerText = new Date().toLocaleString();
