@@ -1,0 +1,250 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-folder</title>
+   <script src="../browser@4.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen"> 
+  <!-- Header -->
+  <header class="bg-blue-600  text-white p-4 flex justify-between items-center shadow relative">
+    <a href="dashboard.html" class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">
+      HOME
+    </a>
+    
+         <button id="menuButton" class="md:hidden flex flex-col gap-1 relative z-20  bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">
+      <span class="block w-6 h-0.5 bg-gray-500"></span>
+      <span class="block mt-1 mb-1 w-6 h-0.5 bg-gray-500"></span>
+      <span class="block w-6 h-0.5 bg-gray-500"></span>
+    </button>
+
+   <!-- Menu Items (Dropdown / Overlay) -->
+<div id="menuItems"
+     class="hidden absolute right-4 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden">
+
+
+
+  <!-- Menu Links -->
+  <div class="py-2">
+
+    <a href="../patient/efolder.html"
+       class="block px-4 py-2 border m-b-2 text-gray-700 hover:bg-gray-100 transition duration-150">
+       Clerking
+    </a>
+
+    <a href="upload.html"
+       class="block px-4 py-2 border m-b-2  text-gray-700 hover:bg-gray-100 transition duration-150">
+       Upload
+    </a>
+    <a href="../patient/index.html"
+       class="block px-4 py-2 border m-b-2 text-gray-700 hover:bg-gray-100 transition duration-150">
+       Search patient
+    </a>
+    <a href="../patient/new-patient.html"
+       class="block px-4 py-2 border mb-2 text-gray-700 hover:bg-gray-100 transition duration-150">
+       New patient
+    </a>
+
+  </div>
+
+  <!-- Divider -->
+  <div class="border-t border-gray-100"></div>
+
+  <!-- Logout -->
+  <button id="logoutBtn"
+          class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition duration-150">
+      Logout
+  </button>
+
+</div>
+  </header>  
+  
+  
+          <!-- Welcome Section -->
+  <div class="bg-white p-6 rounded-2xl shadow mb-6">
+    <h2 class="text-2xl text-center font-semibold mb-2 text-gray-800">e-FOLDER</h2>  
+  </div>
+  
+  <div class="mx-auto bg-white p-6 rounded-2xl shadow-lg">
+   
+
+<!-- Patient Info -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+  <div><strong>Patient Number:</strong> <span id="pNum"></span></div>
+  <div><strong>Full Name:</strong> <span id="pName"></span></div>
+  <!--div><strong>Middle Name:</strong> A</div>
+  <div><strong>Last Name:</strong> Doe</div-->
+  <div><strong>Phone Number:</strong> <span id="pPhone"></span></div>
+  <div><strong>Gender:</strong> <span id="gender"></span></div>
+  <div><strong>Date of Birth:</strong> <span id="dob"></span></div>
+  <div><strong>Address:</strong> <span id="address"></span></div>
+</div>
+
+<!-- Date Range -->
+<div class="flex gap-4 mb-6">
+  <div class="flex-1">
+    <label class="block font-medium mb-1">Date From</label>
+    <input type="date" id="dateFrom" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
+  </div>
+  <div class="flex-1">
+    <label class="block font-medium mb-1">Date To</label>
+    <input type="date" id="dateTo" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
+  </div>
+</div>
+
+<hr class="mb-4">
+
+<!-- E-folder Files -->
+<div id="eFolderFiles" class="space-y-4 border-2 border-double">
+  <!-- Files will be appended here -->
+</div>
+
+<!-- Print Info -->
+<div class="mt-6">
+  <p><strong>Printed by:</strong> <span id="printedBy"></span></p>
+  <p><strong>Printed at:</strong> <span id="printedAt"></span></p>
+</div>
+
+  </div>  
+    <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
+  import {getFirestore, orderBy, getDocs, collection, where, query} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  import {getAuth, signOut, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+ 
+  const firebaseConfig = {
+  apiKey: "AIzaSyDWe6LmmWUGlWHv0zb13I6d0bGODfoRQtQ",
+  authDomain: "nagari-polyclinic.firebaseapp.com",
+  projectId: "nagari-polyclinic",
+  storageBucket: "nagari-polyclinic.firebasestorage.app",
+  messagingSenderId: "145295689654",
+  appId: "1:145295689654:web:ada4e7c4eae887f8dea317",
+  measurementId: "G-KVVQV6FLZ3"
+};
+  
+  const params = new URLSearchParams(window.location.search);
+ //const pNumber = params.get("patientNumber");
+  
+    const patient = JSON.parse(window.localStorage.getItem("patient"))
+let pNumber = patient.patientNumber;
+    pNum.innerHTML = pNumber;
+    pName.innerHTML = (patient.firstName + " " + patient.middleName + " " + patient.lastName).toUpperCase()
+    gender.innerHTML = patient.gender.toUpperCase();
+    pPhone.innerHTML = patient.phone;
+    address.innerHTML = patient.address.toUpperCase();
+  let age = dobToAge(patient.dob);
+    dob.innerHTML = patient.dob + ` (${age}${Number(age)>1? "yrs" : "yr"} old)`;
+  const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const auth = getAuth(app);
+  const db = getFirestore(app);
+  let q = query(
+      collection(db, "files"),
+      where("patientNumber", "==", pNumber),
+      orderBy("createdAt", "desc")
+     );
+  const efileDocs = await getDocs(q);
+  
+  
+
+    // Demo files for this patient
+    const eFolderFiles = [
+     // { file: 'prescription1.png', tag: 'Prescription', uploadedBy: 'Dr. User', uploadedAt: '2026-02-15T10:00:00' },
+    //  { file: 'labreport1.png', tag: 'Lab Report', uploadedBy: 'Dr. User', uploadedAt: '2026-02-16T12:30:00' }
+    ];
+  
+  efileDocs.forEach(d=>{
+    let data = d.data();
+    eFolderFiles.push(data)
+  })
+
+    function renderFiles(from = null, to = null) {
+      const container = document.getElementById('eFolderFiles');
+      let filtered = eFolderFiles;
+      /*if (from) {
+        filtered = filtered.filter(f => new Date(f.uploadedAt) >= new Date(from));
+      }
+      if (to) {
+        filtered = filtered.filter(f => new Date(f.uploadedAt) <= new Date(to));
+      }
+     filtered.sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt));
+      */
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-red-500">No files found in this range.</p>';
+      } else {
+        console.log(filtered[0].createdAt.toLocaleString());
+        container.innerHTML= "";
+        filtered.forEach(f => {
+          console.log(JSON.stringify(f));
+          let fileElm = document.createElement("div");
+          fileElm.className = "p-3 border border-t-8 border-double border-black shadow-inner bg-gray-50";
+          fileElm.innerHTML += `
+            <p><strong>Tag:</strong> ${f.tag}</p>
+            <p><strong>Uploaded by:</strong> ${f.createdBy}</p>
+            <p><strong>Uploaded at:</strong> ${f.createdAt.toDate().toLocaleString()}</p>
+          `;
+          if (f.type=="image"){
+            fileElm.innerHTML += `<img src="${f.url}" alt="${f.tag}" class="mt-2 max-w-full rounded"> `;
+          } else {
+            fileElm.innerHTML +=`<div>${f.content}</div>`;
+          }
+          container.append(fileElm);
+        });
+      }
+    }
+
+    // Initial render
+    renderFiles();
+
+    // Filter by date range
+    document.getElementById('dateFrom').addEventListener('change', () => {
+      renderFiles(document.getElementById('dateFrom').value, document.getElementById('dateTo').value);
+    });
+    document.getElementById('dateTo').addEventListener('change', () => {
+      renderFiles(document.getElementById('dateFrom').value, document.getElementById('dateTo').value);
+    });
+
+    // Auto-fill printed at
+    document.getElementById('printedAt').innerText = new Date().toLocaleString();
+  function dobToAge(dobString) {
+  const today = new Date();
+  const dob = new Date(dobString);
+
+  let age = today.getFullYear() - dob.getFullYear();
+
+  const monthDifference = today.getMonth() - dob.getMonth();
+
+  // If birthday hasn't occurred yet this year, subtract 1
+  if (
+    monthDifference < 0 ||
+    (monthDifference === 0 && today.getDate() < dob.getDate())
+  ) {
+    age--;
+  }
+
+  return age;
+}
+    
+  
+  printedBy.innerHTML = auth.currentUser.email;
+  
+  menuButton.addEventListener("click", () => {
+      menuItems.classList.toggle("hidden");
+    });
+
+    // Optional: close menu when clicking outside
+    window.addEventListener("click", (e) => {
+      if (!menuItems.contains(e.target) && !menuButton.contains(e.target)) {
+        menuItems.classList.add("hidden");
+      }
+    });
+  
+  function logout() {
+      if (confirm("Are you sure you want to logout?")) {
+        signOut(auth);
+        //window.location.href = "signin.html";
+      }
+    }
+  </script>
+</body>
+</html>

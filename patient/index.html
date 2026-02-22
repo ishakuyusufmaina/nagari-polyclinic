@@ -1,0 +1,184 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Patient</title>
+   <script src="../browser@4.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen "> 
+  <!-- Header --> 
+  <header class="bg-blue-600  text-white p-4 flex justify-between items-center shadow">
+    <h1 class="text-xl font-bold">
+
+      Patient
+    </h1>
+    <a href="../dashboard.html" class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">
+      HOME
+    </a>
+  </header>  
+  <div class="bg-white w-full  p-6 rounded-2xl shadow-lg"><!-- Header -->
+
+<!-- Search Form -->
+<form id="searchForm" class="space-y-4">
+
+  <div>
+    <label class="block font-medium mb-1">Search By</label>
+    <select name="parameter" required
+      class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
+      <option value="">Select Parameter</option>
+      <option value="firstName">First Name</option>
+      <option value="phone">Phone Number</option>
+      <option value="patientNumber">Patient Number</option>
+    </select>
+  </div>
+
+  <div>
+    <label class="block font-medium mb-1">Search Value</label>
+    <input type="text" name="value" required
+           class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300"
+           placeholder="Enter search value">
+  </div>
+
+  <div class="flex justify-end pt-4">
+    <button id="searchBtn" type="submit"
+            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+      Search
+    </button>
+  </div>
+
+</form>
+
+<!-- Search Results -->
+<div id="results" class="mt-6"></div>
+
+  </div>  
+  
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
+  import {getFirestore, getDocs, collection, where, query} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  import {getAuth, signOut, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+ 
+  const firebaseConfig = {
+  apiKey: "AIzaSyDWe6LmmWUGlWHv0zb13I6d0bGODfoRQtQ",
+  authDomain: "nagari-polyclinic.firebaseapp.com",
+  projectId: "nagari-polyclinic",
+  storageBucket: "nagari-polyclinic.firebasestorage.app",
+  messagingSenderId: "145295689654",
+  appId: "1:145295689654:web:ada4e7c4eae887f8dea317",
+  measurementId: "G-KVVQV6FLZ3"
+};
+  
+  const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const auth = getAuth(app);
+  const db = getFirestore(app);
+    // Demo patient database
+    const patients = [
+      { firstName: 'John', middleName: 'A', lastName: 'Doe', phone: '08012345678', patientNumber: 'P001', dob: '2000-01-01', gender: 'Male', address: 'Address 1' },
+      { firstName: 'John', middleName: 'B', lastName: 'Smith', phone: '08087654321', patientNumber: 'P002', dob: '1995-05-05', gender: 'Female', address: 'Address 2' }
+    ];
+
+    document.getElementById('searchForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const parameter = formData.get('parameter');
+      const value = formData.get('value').toLowerCase();
+      const q = query(
+      collection(db, "patients"),
+      where(parameter, "==", value)
+      );
+      let preclickTxt = searchBtn.innerHTML;
+      searchBtn.innerHTML = "Searching..";
+      let patientDocs = await getDocs(q);
+      searchBtn.innerHTML = preclickTxt;
+      
+      const results = patients.filter(patient => patient[parameter].toLowerCase() === value);
+
+      const resultsDiv = document.getElementById('results');
+      if (patientDocs.empty) {
+        resultsDiv.innerHTML = '<p class="text-red-500">No patient found.</p>';
+      } else {
+        resultsDiv.innerHTML = "";
+        patientDocs.forEach(doc => {
+          const p = doc.data();
+          let pElm = document.createElement("div");
+          pElm.className = "uppercase border p-3 rounded-lg mb-2  bg-gray-50";
+          pElm.innerHTML =`
+            <p><strong>Name:</strong> ${p.firstName} ${p.middleName} ${p.lastName}</p>
+            <p><strong>Phone:</strong> ${p.phone}</p>
+            <p><strong>Patient Number:</strong> ${p.patientNumber}</p>
+            <p><strong>DOB:</strong> ${p.dob} <span class="lowercase">(${dobToAge(p.dob)} yr${dobToAge(p.dob)>1? "s": ""})</span></p>
+            <p><strong>Gender:</strong> ${p.gender}</p>
+            <p><strong>Address:</strong> ${p.address}</p>
+          <!-- Actions -->
+          <div class="mt-6 flex gap-4">
+          <button
+          class="efolderBtn px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          E-folder
+          </button>
+          <button 
+          class="uploadBtn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          Upload
+          </button>
+          <button 
+          class="clerkingBtn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          Clerking
+          </button>
+          </div>
+        `;
+         resultsDiv.append(pElm);
+          pElm.querySelector(".uploadBtn")
+          .onclick = e=> goToUpload(p.patientNumber, p);
+ 
+          pElm.querySelector(".clerkingBtn")
+          .onclick = e=> goToClerking(p.patientNumber, p);
+          
+         pElm.querySelector(".efolderBtn")
+          .onclick = e=> goToEfolder(p.patientNumber, p);
+          pElm.onclick = e=>{
+            //localStorage.setItem("id", p.patientNumber);
+          }
+        })
+      }
+    });
+  
+  function goToEfolder(pNumber, patient) {
+    window.localStorage.setItem("patient", JSON.stringify(patient));
+
+      window.location.href = 'efolder.html?patientNumer='+pNumber;
+    }
+
+    function goToUpload(pNumber, patient) {
+      window.localStorage.setItem("patient", JSON.stringify(patient));
+      window.location.href = '../clinical-update/upload.html?patientNumber='+pNumber;
+      console.log(pNumber);
+    }
+  
+  function goToClerking(pNumber, patient) {
+window.localStorage.setItem("patient", JSON.stringify(patient));
+   window.location.href = '../clinical-update/clerking.html?patientNumber='+pNumber;
+      console.log(pNumber);
+    }
+  
+  
+  function dobToAge(dobString) {
+  const today = new Date();
+  const dob = new Date(dobString);
+
+  let age = today.getFullYear() - dob.getFullYear();
+
+  const monthDifference = today.getMonth() - dob.getMonth();
+
+  // If birthday hasn't occurred yet this year, subtract 1
+  if (
+    monthDifference < 0 ||
+    (monthDifference === 0 && today.getDate() < dob.getDate())
+  ) {
+    age--;
+  }
+
+  return age;
+}
+  </script></body>
+</html>
