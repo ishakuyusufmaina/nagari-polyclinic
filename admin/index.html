@@ -1,0 +1,45 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+    <script src="../browser@4.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">  <!-- Header -->  <header class="bg-blue-600 text-white p-4 flex justify-between items-center shadow">
+    <h1 class="text-xl font-bold">Admin</h1>
+    <a href="../dashboard.html" class="bg-white rounded text-blue-600 px-4 py-2  hover:bg-gray-100">
+      HOME
+    </a>
+</header>  <!-- Main Content -->  <main class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto"><!-- Search User -->
+  <div onclick="goToSearchUser()" 
+       class="cursor-pointer bg-white p-6 rounded-2xl shadow hover:shadow-lg transition">
+    <h2 class="text-lg font-semibold mb-2">Users</h2>
+    <p class="text-gray-600">Manage existing system users.</p>
+  </div>
+
+  <!-- New User -->
+  <div onclick="goToNewUser()" 
+       class="cursor-pointer bg-white p-6 rounded-2xl shadow hover:shadow-lg transition">
+    <h2 class="text-lg font-semibold mb-2">New User</h2>
+    <p class="text-gray-600">Register a new system user.</p>
+  </div>
+
+</div>
+
+  </main>  <script>
+    function goToSearchUser() {
+      window.location.href = 'users.html';
+    }
+
+    function goToNewUser() {
+      window.location.href = 'newuser.html';
+    }
+
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        window.location.href = 'login.html';
+      }
+    }
+  </script></body>
+</html>

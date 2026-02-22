@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Search</title>
+    <script src="../browser@4.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">  <div class="bg-white w-full max-w-lg p-6 rounded-2xl shadow-lg"><!-- Header -->
+<div class="mb-6 flex justify-between items-center">
+  <h1 class="text-2xl font-bold text-blue-600">User Search</h1>
+  <a href="admin-dashboard.html" class="text-sm text-blue-500 hover:underline">Back to Admin Dashboard</a>
+</div>
+
+<!-- Search Form -->
+<form id="userSearchForm" class="space-y-4">
+
+  <div>
+    <label class="block font-medium mb-1">Search By</label>
+    <select name="parameter" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
+      <option value="">Select Parameter</option>
+      <option value="firstName">First Name</option>
+      <option value="username">Username</option>
+    </select>
+  </div>
+
+  <div>
+    <label class="block font-medium mb-1">Search Value</label>
+    <input type="text" name="value" required placeholder="Enter search value" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
+  </div>
+
+  <div class="flex justify-end pt-4">
+    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Search</button>
+  </div>
+
+</form>
+
+<!-- Search Results -->
+<div id="results" class="mt-6"></div>
+
+  </div>  <script>
+    // Demo users database
+    const users = [
+      { firstName: 'Alice', middleName: 'B', lastName: 'Smith', gender: 'Female', username: 'alice123' },
+      { firstName: 'Bob', middleName: 'C', lastName: 'Johnson', gender: 'Male', username: 'bobj' }
+    ];
+
+    document.getElementById('userSearchForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const parameter = formData.get('parameter');
+      const value = formData.get('value').toLowerCase();
+
+      const results = users.filter(user => user[parameter].toLowerCase() === value);
+
+      const resultsDiv = document.getElementById('results');
+      if (results.length === 0) {
+        resultsDiv.innerHTML = '<p class="text-red-500">No user found.</p>';
+      } else {
+        resultsDiv.innerHTML = results.map(u => `
+          <div class="border p-3 rounded-lg mb-2 bg-gray-50">
+            <p><strong>Name:</strong> ${u.firstName} ${u.middleName} ${u.lastName}</p>
+            <p><strong>Gender:</strong> ${u.gender}</p>
+            <p><strong>Username:</strong> ${u.username}</p>
+          </div>
+        `).join('');
+      }
+    });
+  </script></body>
+</html>

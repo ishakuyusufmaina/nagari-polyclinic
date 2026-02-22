@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management</title>
+  <script src="../browser@4.js"></script>
+  <style>
+  .cont {
+    overflow: auto;
+  }
+  </style>
+  
+  <script type="module">
+    // =========================
+    // Firebase Client Setup
+    // =========================
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+
+    // TODO: Replace with your Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyDWe6LmmWUGlWHv0zb13I6d0bGODfoRQtQ",
+  authDomain: "nagari-polyclinic.firebaseapp.com",
+  projectId: "nagari-polyclinic",
+  storageBucket: "nagari-polyclinic.firebasestorage.app",
+  messagingSenderId: "145295689654",
+  appId: "1:145295689654:web:ada4e7c4eae887f8dea317",
+  measurementId: "G-KVVQV6FLZ3"
+};
+  
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+   const CLOUD_FUNCTION_URL = "https://cfx-mainafly.netlify.app/.netlify/functions/nagari-user-mgt"; // Replace with your cloud function endpoint
+    const APP_ID = "nagari"; // Your appId from Firestore
+
+    // =========================
+    // Initial fetch from client Firestore
+    // =========================
+    export async function fetchUsersFromClient() {
+      try {
+        const usersCol = collection(db, "users");
+        const snapshot = await getDocs(usersCol);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (err) {
+        console.error("Error fetching users:", err);
+        alert("Failed to fetch users: " + err.message);
+        return [];
+      }
+    }
+
+    // =========================
+    // Call cloud function for user actions
+    // =========================
+    async function callCloudFunction(operator, user) {
+      let email = user.email;
+      let username = user.username;
+      try {
+        const response = await fetch(CLOUD_FUNCTION_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ operator, appId: APP_ID, email, username})
+        });
+
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Operation failed");
+        return result;
+      } catch (err) {
+        console.error(err);
+        alert("Error: " + err.message);
+      }
+    }
+
+    // =========================
+    // Render Users Table
+    // =========================
+    export async function renderUsers() {
+      const users = await fetchUsersFromClient();
+      const tbody = document.getElementById('userTableBody');
+      tbody.innerHTML = '';
+
+      users.forEach(user => {
+        console.log(JSON.stringify(user));
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="border uppercase px-4 py-2">${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}</td>
+          <td class="border px-4 py-2">${user.username}</td>
+          <td class="border px-4 py-2">${user.status}</td>
+          <td class="border px-4 py-2 flex gap-2">
+            <button class="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">${user.status=="disabled"? "Enable" :  "Disable"}</button>
+            <button class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">Delete</button>
+          </td>
+        `;
+
+        // Enable / Disable button
+        const toggleBtn = tr.querySelector('button:nth-child(1)');
+        toggleBtn.addEventListener('click', async () => {
+          await callCloudFunction(user.status=="disabled"? "enable" :  "disable", user);
+          renderUsers(); // refresh after action
+        });
+
+        // Delete button
+        const deleteBtn = tr.querySelector('button:nth-child(2)');
+        deleteBtn.addEventListener('click', async () => {
+          if (confirm(`Are you sure you want to delete ${user.email}?`)) {
+            await callCloudFunction("delete", user);
+            renderUsers();
+          }
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Initial render
+    document.addEventListener('DOMContentLoaded', renderUsers);
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen"> 
+  <header class="bg-blue-600 text-white p-4 flex justify-between items-center shadow">
+    <h1 class="text-xl font-bold">User Management</h1>
+    <a href="../dashboard.html" class="bg-white rounded text-blue-600 px-4 py-2 hover:bg-gray-100">HOME</a>
+  </header>  
+
+  <div class="cont max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-lg">
+    <div class="mb-6 flex justify-between items-center">
+      <a href="newuser.html" class="bg-green-600 rounded text-white px-4 py-2 hover:bg-green-800">+New user</a>
+    </div>
+
+    <!-- Users Table -->
+    <table class="w-full border-collapse">
+      <thead>
+        <tr class="bg-gray-200">
+          <th class="border px-4 py-2 text-left">Full Name</th>
+          <th class="border px-4 py-2 text-left">Username</th>
+          <th class="border px-4 py-2 text-left">Status</th>
+          <th class="border px-4 py-2 text-left">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody">
+        <!-- Users will be populated here -->
+      </tbody>
+    </table>
+  </div>  
+</body>
+</html>
