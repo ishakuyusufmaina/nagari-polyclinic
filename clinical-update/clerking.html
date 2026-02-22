@@ -1,0 +1,231 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clerking Form</title>
+     <script src="../browser@4.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen "> 
+   <!-- Header --> 
+  <header class="bg-blue-600  text-white p-4 flex justify-between items-center shadow relative">
+    
+    <a href="../dashboard.html" class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">
+      HOME
+    </a>
+     
+     <button id="menuButton" class="md:hidden flex flex-col gap-1 relative z-20  bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">
+      <span class="block w-6 h-0.5 bg-gray-500"></span>
+      <span class="block mt-1 mb-1 w-6 h-0.5 bg-gray-500"></span>
+      <span class="block w-6 h-0.5 bg-gray-500"></span>
+    </button>
+
+   <!-- Menu Items (Dropdown / Overlay) -->
+<div id="menuItems"
+     class="hidden absolute right-4 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden">
+
+
+
+  <!-- Menu Links -->
+  <div class="py-2">
+
+    <a href="../patient/efolder.html"
+       class="block px-4 py-2 border m-b-2 text-gray-700 hover:bg-gray-100 transition duration-150">
+       e-Folder
+    </a>
+
+    <a href="upload.html"
+       class="block px-4 py-2 border m-b-2  text-gray-700 hover:bg-gray-100 transition duration-150">
+       Upload
+    </a>
+    <a href="../patient/index.html"
+       class="block px-4 py-2 border m-b-2 text-gray-700 hover:bg-gray-100 transition duration-150">
+       Search patient
+    </a>
+    <a href="../patient/new-patient.html"
+       class="block px-4 py-2 border mb-2 text-gray-700 hover:bg-gray-100 transition duration-150">
+       New patient
+    </a>
+
+  </div>
+
+  <!-- Divider -->
+  <div class="border-t border-gray-100"></div>
+
+  <!-- Logout -->
+  <button id="logoutBtn"
+          class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition duration-150">
+      Logout
+  </button>
+
+</div>
+  </header>
+  
+        <!-- Welcome Section -->
+  <div class="bg-white p-6 rounded-2xl shadow mb-6">
+    <h2 class="text-2xl text-center font-semibold mb-2 text-gray-800">CLERKING</h2>  
+  </div>
+  
+  <div class="bg-white w-full  p-6 rounded-2xl shadow-lg">
+
+<!-- Clerking Form -->
+<form id="clerkingForm" class="space-y-4 ">
+
+  <!-- Patient Number -->
+  <div>
+    <label class="block font-medium mb-1">Patient Number</label>
+    <input type="text" id="pNum" name="patientNumber" required readonly
+           class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
+  </div>
+
+  <!-- Patient Full Name -->
+  <div>
+    <label class="block font-medium mb-1">Full Name</label>
+    <input type="text" id="pName" name="fullName" required readonly
+           class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
+  </div>
+
+  <!-- Patient Gender -->
+  <div>
+    <label class="block font-medium mb-1">Gender</label>
+    <select id="gender" name="gender" required disabled
+            class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
+      <option value="">Select Gender</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+      <option value="other">Other</option>
+    </select>
+  </div>
+  
+  <!-- Patient age -->
+  <div>
+    <label id="age" class="block font-medium mb-1">Age: </label>
+  </div>
+
+  <!-- Content -->
+  <div>
+    <label class="block font-medium mb-1">Content</label>
+    <textarea id="content" name="content" rows="6" required
+              placeholder="Enter clinical notes, complaints, history, examination..."
+              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300"></textarea>
+  </div>
+  
+    <!-- Hidden Inputs -->
+  <input type="hidden" name="type" value="text">
+  <input type="hidden" name="tag" value="Clerking">
+
+
+  <!-- Buttons -->
+  <div class="flex justify-end gap-3 pt-4">
+    <button type="reset"
+            class="px-4 py-2 border rounded-lg hover:bg-gray-100">
+      Clear
+    </button>
+
+    <button id="submitBtn" type="submit"
+            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+      Save
+    </button>
+  </div>
+
+</form>
+
+  </div>  
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
+  import {getFirestore, doc, collection, serverTimestamp,  setDoc} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  import {getAuth, signOut, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+ 
+  const firebaseConfig = {
+  apiKey: "AIzaSyDWe6LmmWUGlWHv0zb13I6d0bGODfoRQtQ",
+  authDomain: "nagari-polyclinic.firebaseapp.com",
+  projectId: "nagari-polyclinic",
+  storageBucket: "nagari-polyclinic.firebasestorage.app",
+  messagingSenderId: "145295689654",
+  appId: "1:145295689654:web:ada4e7c4eae887f8dea317",
+  measurementId: "G-KVVQV6FLZ3"
+};
+  
+  const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const auth = getAuth(app);
+  const db = getFirestore(app);
+  
+  const params = new URLSearchParams(window.location.search);
+  const patient = JSON.parse(window.localStorage.getItem("patient"))
+  const pNumber = patient.patientNumber;
+  pNum.value = pNumber;
+  //let patient = await getDoc(doc(db, "patients", pNumber));
+  
+  pName.value = (patient.firstName + " " + patient.middleName + " " + patient.lastName).toUpperCase()
+ gender.value = patient.gender;
+  let a = dobToAge(patient.dob);
+  console.log(patient.dob, a);
+  age.innerHTML += a + (Number(a)>1? " yrs old" : " yr old");
+    document.getElementById('clerkingForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      let presubmitTxt = submitBtn.innerHTML;
+      submitBtn.innerHTML = "Saving..";
+      submitBtn.disabled = true;
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+      data.createdBy = auth.currentUser.email;
+      data.createdAt = serverTimestamp();
+      let docRef = doc(collection(db, "files"));
+      await setDoc(docRef, data);
+      console.log('Clerking Data:', data);
+      alert('Record saved successfully!');
+      submitBtn.innerHTML = presubmitTxt;
+      this.reset();
+      submitBtn.disabled = false;
+    });
+  </script>
+  <script>
+const textarea = document.getElementById("content");
+
+textarea.addEventListener("input", function () {
+  this.style.height = "auto";
+  this.style.height = this.scrollHeight + "px";
+});
+  
+  
+  function dobToAge(dobString) {
+  const today = new Date();
+  const dob = new Date(dobString);
+
+  let age = today.getFullYear() - dob.getFullYear();
+
+  const monthDifference = today.getMonth() - dob.getMonth();
+
+  // If birthday hasn't occurred yet this year, subtract 1
+  if (
+    monthDifference < 0 ||
+    (monthDifference === 0 && today.getDate() < dob.getDate())
+  ) {
+    age--;
+  }
+
+  return age;
+}
+  
+  
+        menuButton.addEventListener("click", () => {
+      menuItems.classList.toggle("hidden");
+    });
+
+    // Optional: close menu when clicking outside
+    window.addEventListener("click", (e) => {
+      if (!menuItems.contains(e.target) && !menuButton.contains(e.target)) {
+        menuItems.classList.add("hidden");
+      }
+    });
+  
+  function logout() {
+      if (confirm("Are you sure you want to logout?")) {
+        signOut(auth);
+        //window.location.href = "signin.html";
+      }
+    }
+</script>
+</body>
+</html>

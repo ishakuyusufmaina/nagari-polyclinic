@@ -1,0 +1,343 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload File</title>
+    <script src="../browser@4.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen"> 
+   <!-- Header --> 
+  <header class="bg-blue-600  text-white p-4 flex justify-between items-center shadow relative">
+       
+    <a href="../dashboard.html" class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">
+      HOME
+    </a>
+     
+       <!-- Menu Icon (Visible on small screens) -->
+    <button id="menuButton" class="md:hidden flex flex-col gap-1 relative z-20  bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">
+      <span class="block w-6 h-0.5 bg-gray-500"></span>
+      <span class="block mt-1 mb-1 w-6 h-0.5 bg-gray-500"></span>
+      <span class="block w-6 h-0.5 bg-gray-500"></span>
+    </button>
+
+   <!-- Menu Items (Dropdown / Overlay) -->
+<div id="menuItems"
+     class="hidden absolute right-4 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden">
+
+
+
+  <!-- Menu Links -->
+  <div class="py-2">
+
+    <a href="../patient/efolder.html"
+       class="block px-4 py-2 border m-b-2 text-gray-700 hover:bg-gray-100 transition duration-150">
+       e-Folder
+    </a>
+
+    <a href="clerking.html"
+       class="block px-4 py-2 border m-b-2  text-gray-700 hover:bg-gray-100 transition duration-150">
+       Clerking
+    </a>
+    <a href="../patient/index.html"
+       class="block px-4 py-2 border m-b-2 text-gray-700 hover:bg-gray-100 transition duration-150">
+       Search patient
+    </a>
+    <a href="../patient/new-patient.html"
+       class="block px-4 py-2 border mb-2 text-gray-700 hover:bg-gray-100 transition duration-150">
+       New patient
+    </a>
+
+  </div>
+
+  <!-- Divider -->
+  <div class="border-t border-gray-100"></div>
+
+  <!-- Logout -->
+  <button id="logoutBtn"
+          class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition duration-150">
+      Logout
+  </button>
+
+</div>
+  </header>  
+  
+  
+  <!-- Welcome Section -->
+  <div class="bg-white p-6 rounded-2xl shadow mb-6">
+    <h2 class="text-2xl text-center font-semibold mb-2 text-gray-800">UPLOAD</h2>  
+  </div>
+  
+  <div class="bg-white w-full  p-6 rounded-2xl shadow-lg">
+    
+      
+
+<!-- Upload Form -->
+<form id="uploadForm" class="space-y-4">
+
+  <!-- Tag -->
+  <div>
+    <label class="block font-medium mb-1">Tag</label>
+    <select id="tag" name="tag" required
+            class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
+      <option value="">Select Tag</option>
+      <option value="Clerking">Clerking</option>
+      <option value="xray">X-Ray</option>
+      <option value="Prescription">Prescription</option>
+      <option value="Lab Report">Lab Report</option>
+      <option value="Scan">Scan</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
+
+  <!-- Patient Number -->
+  <div>
+    <label class="block font-medium mb-1">Patient Number</label>
+    <input type="text" id="pNum" readonly name="patientNumber" required
+           class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
+  </div>
+  
+    <!-- Patient Name -->
+  <div>
+    <label class="block font-medium mb-1">Patient Name</label>
+    <input type="text" id="pName" readonly name="patientName" required
+           class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
+  </div>
+
+  <!-- File Upload -->
+<div>
+  <label class="block font-medium mb-1">File</label>
+
+  <input type="file"
+         id="fileInput"
+         name="file"
+         multiple
+         accept="image/*"
+         required
+         class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
+
+  <!-- Preview -->
+  <div id="previews" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">
+  </div>
+</div>
+  <!-- Hidden Inputs -->
+  <input type="hidden" name="uploadedBy" id="uploadedBy">
+  <input type="hidden" name="uploadedAt" id="uploadedAt">
+
+  <!-- Submit Button -->
+  <div class="flex justify-end pt-4">
+    <button id="resetBtn"
+            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+      Reset
+    </button>
+  </div>
+
+</form>
+
+  </div>   
+  
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
+  import {getFirestore, getDocs, collection, where, query} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  import {getAuth, signOut, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+ 
+  const firebaseConfig = {
+  apiKey: "AIzaSyDWe6LmmWUGlWHv0zb13I6d0bGODfoRQtQ",
+  authDomain: "nagari-polyclinic.firebaseapp.com",
+  projectId: "nagari-polyclinic",
+  storageBucket: "nagari-polyclinic.firebasestorage.app",
+  messagingSenderId: "145295689654",
+  appId: "1:145295689654:web:ada4e7c4eae887f8dea317",
+  measurementId: "G-KVVQV6FLZ3"
+};
+  
+  const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const auth = getAuth(app);
+  const db = getFirestore(app);
+  
+  const params = new URLSearchParams(window.location.search);
+  const patient = JSON.parse(window.localStorage.getItem("patient"))
+  const pNumber = patient.patientNumber;
+  pNum.value = pNumber;
+  //let patient = await getDoc(doc(db, "patients", pNumber));
+  
+  pName.value = (patient.firstName + " " + patient.middleName + " " + patient.lastName).toUpperCase()
+  const cloudName = "dkwvf2bv1"; // Replace with your Cloudinary cloud name
+  const uploadPreset = "clinical_file"; // Replace with your unsigned preset
+
+    // Auto-fill hidden fields
+    document.getElementById('uploadedAt').value = new Date().toISOString();
+    const previewImages = document.getElementById('previews');
+  
+    document.getElementById('resetBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      previewImages.innerHTML = "";
+      this.form.reset(); return;
+      const formData = new FormData(this);
+      console.log('File Upload Data:', Object.fromEntries(formData.entries()));
+      alert('File uploaded successfully! (Demo mode)');
+      this.reset();
+      previewImages.innerHTML = "";
+    });
+  
+  
+  var uploadCount = 0;
+  
+  const fileInput = document.getElementById('fileInput');
+  
+  fileInput.addEventListener('change', function () {
+    const file = this.files[0];
+    previewImages.innerHTML = "";
+    Array.from(this.files).forEach(async (file, i)=>{
+      
+    /* previewImages.innerHTML +=`<img
+         src=""
+         alt="Preview"
+         class="hidden preview${i} max-w-full h-48 object-contain border rounded-lg p-2 bg-gray-50">
+      `;*/
+     let previewImage = previewImages.querySelector(".preview"+i);
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onload = async function (e) {
+        let previewImage = document.createElement("img");
+        let upBtn = document.createElement("button");
+        upBtn.innerHTML = "upload";
+        upBtn.className = "rounded bg-danger border shadow-sm";
+        previewImage.className = "w-full h-32 object-cover rounded-lg border shadow-sm";
+        previewImage.src = e.target.result;
+        let file = reader.file; // e.target.files[0];
+        console.log(file);
+        upBtn.onclick = async e=>{
+          if (!e.target.form.checkValidity()) return;
+          e.preventDefault();
+         // previewImage.src = "";
+              document.getElementById('uploadedBy').value = auth.currentUser.email; // replace with dynamic user
+          upBtn.innerHTML = "uploading..";
+         let url = await uploadToCloudinary(file, {id: "nagari", tag: tag.value, patientNumber: pNum.value, createdBy: uploadedBy.value})
+         previewImage.src = url;
+          uploadCount++;
+          upBtn.innerHTML = "uploaded - serial "+uploadCount;
+          upBtn.onclick = e=>{e.preventDefault();};
+          
+        }
+        previewImage.classList.remove('hidden');
+        console.log(i);
+        previewImages.append(previewImage, upBtn);
+      };
+      let optimized = await optimizeImage(file)
+      reader.readAsDataURL(optimized);
+      reader.file = optimized;
+      console.log(optimized.size / (1024 * 1024), file.size  / (1024 * 1024), " in MB");
+    } else {
+      previewImage.src = '';
+      previewImage.classList.add('hidden');
+    }
+    });
+  });
+  
+  
+  
+  // SETTINGS
+const MAX_WIDTH = 1024;
+const MAX_HEIGHT = 1024;
+const QUALITY = 0.7; // 0.1 - 1.0
+  function optimizeImage(file) {
+  return new Promise((resolve) => {
+
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = e => img.src = e.target.result;
+
+    img.onload = () => {
+
+      let { width, height } = img;
+
+      // Maintain aspect ratio
+      if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+        const ratio = Math.min(
+          MAX_WIDTH / width,
+          MAX_HEIGHT / height
+        );
+
+        width *= ratio;
+        height *= ratio;
+      }
+
+      // Canvas
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Convert to Blob (Compressed)
+      canvas.toBlob(
+        blob => resolve(blob),
+        "image/jpeg",
+        QUALITY
+      );
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+  
+  async function uploadToCloudinary(file, meta) {
+  const formData = new FormData();
+  formData.append("file", file);
+    console.log(uploadPreset);
+  formData.append("upload_preset", uploadPreset);
+
+  // Add custom context for webhook
+  // context format: "key1=value1|key2=value2"
+  formData.append(
+    "context",
+    `id=${meta.id}|tag=${meta.tag}|patientNumber=${meta.patientNumber}|createdBy=${meta.createdBy}`
+  );
+
+  // Optional: tags
+  formData.append("tags", "medical file");
+
+  // Webhook URL
+ // formData.append("notification_url", "https://cfx-mainafly.netlify.app/.netlify/functions/nagari-wh");
+  // Upload
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
+  
+  const data = await response.json();
+    console.log(JSON.stringify(data));
+  console.log("Uploaded:", data.secure_url);
+  return data.secure_url;
+}
+  
+  
+      menuButton.addEventListener("click", () => {
+      menuItems.classList.toggle("hidden");
+    });
+
+    // Optional: close menu when clicking outside
+    window.addEventListener("click", (e) => {
+      if (!menuItems.contains(e.target) && !menuButton.contains(e.target)) {
+        menuItems.classList.add("hidden");
+      }
+    });
+  
+  function logout() {
+      if (confirm("Are you sure you want to logout?")) {
+        signOut(auth);
+        //window.location.href = "signin.html";
+      }
+    }
+</script>
+  
+</body>
+</html>
