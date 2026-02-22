@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nagari Dashboard</title>
+  <script src="tw.es"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-blue-600 text-white p-4 flex justify-between items-center shadow relative">
+    <h1 class="text-xl font-bold">NAGARI POLYCLINIC</h1>
+
+    <!-- Menu Icon (Visible on small screens) -->
+    <button id="menuButton" class="md:hidden flex flex-col gap-1 relative z-20  bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">
+      <span class="block w-6 h-0.5 bg-gray-500"></span>
+      <span class="block mt-1 mb-1 w-6 h-0.5 bg-gray-500"></span>
+      <span class="block w-6 h-0.5 bg-gray-500"></span>
+    </button>
+
+   <!-- Menu Items (Dropdown / Overlay) -->
+<div id="menuItems"
+     class="hidden absolute right-4 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden">
+
+  <!-- User Info -->
+  <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
+    <p class="text-sm text-gray-500">Signed in as</p>
+    <p id="displayName" class="font-semibold text-gray-800 truncate">Dr. User</p>
+  </div>
+
+  <!-- Menu Links -->
+  <div class="py-2">
+
+    <a href="admin/index.html"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-150">
+       System Users
+    </a>
+
+    <a href="changePsw.html"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-150">
+       Change Password
+    </a>
+
+  </div>
+
+  <!-- Divider -->
+  <div class="border-t border-gray-100"></div>
+
+  <!-- Logout -->
+  <button id="logoutBtn"
+          class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition duration-150">
+      Logout
+  </button>
+
+</div>
+   
+  </header>
+
+  <!-- Main Content -->
+  <main class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <!-- New Patient -->
+      <div onclick="goToNewPatient()" 
+           class="cursor-pointer bg-white p-6 rounded-2xl shadow hover:shadow-lg transition">
+        <h2 class="text-lg font-semibold mb-2">New Patient</h2>
+        <p class="text-gray-600">Register a new patient into the system.</p>
+      </div>
+
+      <!-- Search Patient -->
+      <div onclick="goToSearchPatient()" 
+           class="cursor-pointer bg-white p-6 rounded-2xl shadow hover:shadow-lg transition">
+        <h2 class="text-lg font-semibold mb-2">Search Patient</h2>
+        <p class="text-gray-600">Find existing patient records.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- JavaScript -->
+  <script>
+  
+  
+    const menuButton = document.getElementById("menuButton");
+    const menuItems = document.getElementById("menuItems");
+
+  
+  
+    menuButton.addEventListener("click", () => {
+      menuItems.classList.toggle("hidden");
+    });
+
+    function goToNewPatient() {
+      window.location.href = "patient/new-patient.html";
+    }
+
+    function goToSearchPatient() {
+      window.location.href = "patient/index.html";
+    }
+
+    
+  
+  
+
+    // Optional: close menu when clicking outside
+    window.addEventListener("click", (e) => {
+      if (!menuItems.contains(e.target) && !menuButton.contains(e.target)) {
+        menuItems.classList.add("hidden");
+      }
+    });
+   
+  </script>
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
+  import {getFirestore, doc, collection, getDocs, where, query, setDoc, getDoc} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  import {getAuth, signOut, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+  
+     //import {getDatabase, set, ref, onValue, child, get } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+      // Import the functions you need from the SDKs you need
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDWe6LmmWUGlWHv0zb13I6d0bGODfoRQtQ",
+  authDomain: "nagari-polyclinic.firebaseapp.com",
+  projectId: "nagari-polyclinic",
+  storageBucket: "nagari-polyclinic.firebasestorage.app",
+  messagingSenderId: "145295689654",
+  appId: "1:145295689654:web:ada4e7c4eae887f8dea317",
+  measurementId: "G-KVVQV6FLZ3"
+};
+  
+  const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const auth = getAuth(app);
+  const db = getFirestore(app);
+     onAuthStateChanged(auth, async user=>{
+    if (!user) 
+    window.location.href = "signin.html";
+    else {
+      displayName.innerHTML = user.email;
+      let q = query(
+      collection(db, "users"),
+      where("email", "==", user.email)
+      );
+      let userDocs = await getDocs(q);
+      userDocs.forEach(d=>{
+        let data = d.data();
+        displayName.innerHTML = (data.firstName + data.middleName + data.lastName).toUpperCase();
+      })
+      
+      
+    }
+  })
+  
+  logoutBtn.onclick = logout;
+  
+  function logout() {
+      if (confirm("Are you sure you want to logout?")) {
+        signOut(auth);
+        //window.location.href = "signin.html";
+      }
+    }
+  
+  </script>
+
+</body>
+</html>
